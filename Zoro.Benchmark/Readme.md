@@ -9,7 +9,7 @@
 
 # Change Max Threads and Logging
   Please change the settings in appsetttings.json
-	```
+```
 	{
 	  "Zoro.Benchmark.Services.TransactionService": {
 		"MinThreads": 1,
@@ -36,4 +36,4 @@
 		}
 	  }
 	}
-	```
+```
