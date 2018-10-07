@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2019
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zoro.Benchmark", "ZoroBenchmark\Zoro.Benchmark.csproj", "{87E13B8F-5811-4735-9DC5-FC6995D49153}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zoro.Benchmark", "Zoro.Benchmark\Zoro.Benchmark.csproj", "{DFC23A2D-934B-4B0D-B956-AB34AC8C111C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{87E13B8F-5811-4735-9DC5-FC6995D49153}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{87E13B8F-5811-4735-9DC5-FC6995D49153}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{87E13B8F-5811-4735-9DC5-FC6995D49153}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{87E13B8F-5811-4735-9DC5-FC6995D49153}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFC23A2D-934B-4B0D-B956-AB34AC8C111C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFC23A2D-934B-4B0D-B956-AB34AC8C111C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFC23A2D-934B-4B0D-B956-AB34AC8C111C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFC23A2D-934B-4B0D-B956-AB34AC8C111C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
