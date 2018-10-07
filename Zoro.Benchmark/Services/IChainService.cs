@@ -16,6 +16,12 @@ namespace Zoro.Benchmark.Services
         protected readonly ILogger<IChainService> _logger;
         protected readonly IConfigurationRoot _config;
 
+        /// <summary>
+        /// Initiate chain (NEO/Zoro) service
+        /// Test Iterations, Min/Max threads which can be used by test client
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="config"></param>
         public IChainService(ILogger<IChainService> logger, IConfigurationRoot config)
         {
             _logger = logger;
@@ -28,6 +34,9 @@ namespace Zoro.Benchmark.Services
             MaxCompletionPortThreads = config.GetSection(this.GetType().ToString()).GetValue<Int32>("MaxCompletionPortThreads");
         }
 
+        /// <summary>
+        /// Set Max Threads, Min Threads
+        /// </summary>
         protected void SetThreadNumbers()
         {
 
@@ -48,6 +57,9 @@ namespace Zoro.Benchmark.Services
             }
         }
 
+        /// <summary>
+        /// Main execution method
+        /// </summary>
         public abstract void Run();
     }
 }
