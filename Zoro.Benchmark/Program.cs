@@ -12,6 +12,14 @@ namespace Zoro.Benchmark
     {
         public static IConfigurationRoot configuration;
 
+        private static ILoggerFactory _loggerFactory = new LoggerFactory()
+                //.AddDebug(LogLevel.Information)
+                //.AddConsole(LogLevel.Information));
+                .AddDebug(LogLevel.Trace)
+                .AddConsole(LogLevel.Trace);
+
+        private static ILogger _logger = _loggerFactory.CreateLogger("Zoro.Benchmark");
+
         /// <summary>
         /// Add all the services need to be tested in this method.
         /// Sample: serviceCollection.AddTransient<IChainService, TransactionService>();
@@ -28,23 +36,32 @@ namespace Zoro.Benchmark
 
         static void Main(string[] args)
         {
-            // Create service collection
-            ServiceCollection serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-
-            // create neo services collection
-            ConfigureNeoServices(serviceCollection);
-
-            // Create service provider
-            IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
-
-            // Run service
-            IEnumerator<IChainService> services = serviceProvider.GetServices<IChainService>().GetEnumerator();
-            while (services.MoveNext())
+            try
             {
-                IChainService service = services.Current;
-                service.Run();
+                // Create service collection
+                ServiceCollection serviceCollection = new ServiceCollection();
+                ConfigureServices(serviceCollection);
+
+                // create neo services collection
+                ConfigureNeoServices(serviceCollection);
+
+                // Create service provider
+                IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+
+                // Run service
+                IEnumerator<IChainService> services = serviceProvider.GetServices<IChainService>().GetEnumerator();
+                while (services.MoveNext())
+                {
+                    IChainService service = services.Current;
+                    service.Run();
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                _logger.LogError(ex.StackTrace);
+            }
+            
         }
 
         /// <summary>
@@ -54,11 +71,7 @@ namespace Zoro.Benchmark
         private static void ConfigureServices(IServiceCollection serviceCollection)
         {
             // Add logging
-            serviceCollection.AddSingleton(new LoggerFactory()
-                //.AddDebug(LogLevel.Information)
-                //.AddConsole(LogLevel.Information));
-                .AddDebug(LogLevel.Trace)
-                .AddConsole(LogLevel.Trace));
+            serviceCollection.AddSingleton(_loggerFactory);
 
             serviceCollection.AddLogging();
 
