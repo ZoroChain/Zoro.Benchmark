@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Zoro.Benchmark.Services.Transactions;
 
 namespace Zoro.Benchmark.Services
 {
@@ -27,7 +28,7 @@ namespace Zoro.Benchmark.Services
         /// Run the benchmark test by calling async method
         /// @Todo Need to implement the logic between OnTaskStart and OnTaskEnd
         /// </summary>
-        public override void Run()
+        async public override Task Run(Dictionary<string, object> args)
         {
             _logger.LogInformation("Start Service {0}", this.GetType().ToString());
 
@@ -55,6 +56,13 @@ namespace Zoro.Benchmark.Services
                     _logger.LogDebug("Thread: {1}, Is pool thread: {2}",
                        Thread.CurrentThread.GetHashCode(),
                        Thread.CurrentThread.IsThreadPoolThread);
+
+                    Dictionary<string, object> transferArgs = new Dictionary<string, object>();
+                    transferArgs.Add("wif", "L3yQVZKu7u1etBWbeqfNeX1d19mRJdjZTZxiFt72AhLvxBDJwmne");
+                    transferArgs.Add("targetAddress", "ARuWRG39dd364tDpwqVZuyxur8VG2wHa2Q");
+                    transferArgs.Add("sendCount", 1);
+
+                    await new TransferOneNeo(_logger, _config).Run(transferArgs);
 
                     /*
                     await Task.Run(() => {

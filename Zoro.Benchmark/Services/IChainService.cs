@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Zoro.Benchmark.Services
 {
@@ -60,6 +62,6 @@ namespace Zoro.Benchmark.Services
         /// <summary>
         /// Main execution method
         /// </summary>
-        public abstract void Run();
+        public abstract Task Run(Dictionary<String, Object> args);
     }
 }

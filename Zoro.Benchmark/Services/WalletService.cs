@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace Zoro.Benchmark.Services
             done = new CountdownEvent(Iterations);
         }
 
-        public override void Run()
+        async public override Task Run(Dictionary<String, Object> args)
         {
             _logger.LogInformation("Start Service {0}", this.GetType().ToString());
 

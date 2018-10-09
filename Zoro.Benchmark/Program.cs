@@ -53,7 +53,7 @@ namespace Zoro.Benchmark
                 while (services.MoveNext())
                 {
                     IChainService service = services.Current;
-                    service.Run();
+                    service.Run(new Dictionary<string, object>());
                 }
             }
             catch (Exception ex)

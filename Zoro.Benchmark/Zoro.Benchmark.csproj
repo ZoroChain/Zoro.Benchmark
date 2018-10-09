@@ -19,6 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\llvm\llvm.csproj" />
+    <ProjectReference Include="..\thinSDK\thinSDK.csproj" />
+    <ProjectReference Include="..\thinSDK_neo\thinSDK_neo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
