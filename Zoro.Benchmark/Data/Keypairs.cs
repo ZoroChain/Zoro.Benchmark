@@ -18,9 +18,14 @@ namespace Zoro.Benchmark.Data
             if (dataFrom == DATA_FROM.FILE)
             {
                 foreach (var kvp in File.ReadLines(config.GetSection("Data").GetValue<string>(("InputFile")))
-                    .Select(line => line.Split(','))
-                    .ToDictionary(data => data[0].Replace("'", ""), data => data[1].Replace("'", "")))
+                    .Select(line => line.Split(':'))
+                    .ToDictionary(data => data[1].Replace("'", ""), data => data[0].Replace("'", "")))
+                {
+                    if (!String.IsNullOrEmpty(kvp.Key))
+                    {
                         this.Add(kvp.Key, kvp.Value);
+                    }
+                } 
             }
         }
     }

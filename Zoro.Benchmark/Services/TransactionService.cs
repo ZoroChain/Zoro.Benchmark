@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Zoro.Benchmark.Data;
 using Zoro.Benchmark.Services.Transactions;
+using static System.Collections.Generic.Dictionary<string, string>;
 
 namespace Zoro.Benchmark.Services
 {
@@ -19,8 +21,12 @@ namespace Zoro.Benchmark.Services
 
         private DateTime startTime;
 
+        private Keypairs keypairs;
+
         public TransactionService(ILogger<IChainService> logger, IConfigurationRoot config) : base(logger, config)
         {
+            keypairs = new Keypairs(config, DATA_FROM.FILE);
+            Iterations = keypairs.Count;
             done = new CountdownEvent(Iterations);
         }
 
@@ -36,7 +42,8 @@ namespace Zoro.Benchmark.Services
 
             startTime = DateTime.Now;
 
-            for (int i = 0; i < Iterations; i++)
+            int i = 0;
+            foreach (KeyValuePair<string, string> entry in keypairs)
             {
                 ThreadPool.GetAvailableThreads(out int workerThreads, out int portThreads);
                 _logger.LogDebug("Current Available Threads. workerThreads:{0}, portThreads:{1}",
@@ -44,12 +51,12 @@ namespace Zoro.Benchmark.Services
                    MaxCompletionPortThreads);
 
                 var queueTime = DateTime.Now;
-                int id = i;
-                ThreadPool.QueueUserWorkItem(async (o) => 
+                int id = i++;
+                ThreadPool.QueueUserWorkItem(async (o) =>
                 {
                     OnTaskStart(id, queueTime);
                     // add a task here to simulate neo operation
-                    await Task.Delay(500);
+                    //await Task.Delay(500);
                     //_logger.LogInformation("{0} Thread ID: {1}",
                     //    this.GetType().ToString(), System.Threading.Thread.CurrentThread.ManagedThreadId);
 
@@ -58,21 +65,15 @@ namespace Zoro.Benchmark.Services
                        Thread.CurrentThread.IsThreadPoolThread);
 
                     Dictionary<string, object> transferArgs = new Dictionary<string, object>();
-                    transferArgs.Add("wif", "L3yQVZKu7u1etBWbeqfNeX1d19mRJdjZTZxiFt72AhLvxBDJwmne");
-                    transferArgs.Add("targetAddress", "ARuWRG39dd364tDpwqVZuyxur8VG2wHa2Q");
+                    transferArgs.Add("wif", entry.Key);
+                    transferArgs.Add("targetAddress", entry.Value);
                     transferArgs.Add("sendCount", 1);
 
+                    // run transfer async
                     await new TransferOneNeo(_logger, _config).Run(transferArgs);
 
-                    /*
-                    await Task.Run(() => {
-                        _logger.LogInformation("{0} Thread ID: {1}",
-                            this.GetType().ToString(), Thread.CurrentThread.ManagedThreadId);
-                    });*/
                     OnTaskEnd(id, queueTime);
                 });
-
-                Thread.Sleep(10);
             }
 
             done.Wait();

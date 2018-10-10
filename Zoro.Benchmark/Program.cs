@@ -30,7 +30,7 @@ namespace Zoro.Benchmark
             // Add TransactionService
             serviceCollection.AddTransient<IChainService, TransactionService>();
             // Add WalletService
-            serviceCollection.AddTransient<IChainService, WalletService>();
+            //serviceCollection.AddTransient<IChainService, WalletService>();
             // Add Other Services
         }
 
