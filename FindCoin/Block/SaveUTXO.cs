@@ -38,11 +38,11 @@ namespace FindCoin.Block
                 File.Delete(utxoPath);
                 File.WriteAllText(utxoPath, result.ToString(), Encoding.UTF8);
             }
-	        var curdir = Directory.GetCurrentDirectory();
+            var curdir = Directory.GetCurrentDirectory();
             foreach (JObject vin in jObject["vin"])
             { 
-                var inPath = "utxo" + Path.DirectorySeparatorChar + vin["txid"] + "_" + vin["vout"] + "*.txt";
-		        foreach (string filePath in Directory.GetFiles(curdir + inPath))
+                var inPath = vin["txid"] + "_" + vin["vout"] + "*.txt";
+		        foreach (string filePath in Directory.GetFiles(curdir + Path.DirectorySeparatorChar + "utxo", inPath))
 		        {
                     if (File.Exists(filePath))
 	    		        ChangeUTXO(filePath);
