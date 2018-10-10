@@ -65,7 +65,9 @@ namespace Zoro.Benchmark.Services
                        Thread.CurrentThread.IsThreadPoolThread);
 
                     Dictionary<string, object> transferArgs = new Dictionary<string, object>();
-                    transferArgs.Add("wif", entry.Key);
+                    // transferArgs.Add("wif", entry.Key); // need to change to list if read from file
+                    // @TODO
+                    transferArgs.Add("wif", "L3yQVZKu7u1etBWbeqfNeX1d19mRJdjZTZxiFt72AhLvxBDJwmne");
                     transferArgs.Add("targetAddress", entry.Value);
                     transferArgs.Add("sendCount", 1);
 
