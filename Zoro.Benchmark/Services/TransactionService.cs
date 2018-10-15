@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq; 
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,9 @@ namespace Zoro.Benchmark.Services
         {
             keypairs = new Keypairs(config, DATA_FROM.FILE);
             Iterations = keypairs.Count;
-            done = new CountdownEvent(Iterations);
+            // done = new CountdownEvent(Iterations);
+	    //  tlan test
+            done = new CountdownEvent(1);
         }
 
         /// <summary>
@@ -43,40 +46,44 @@ namespace Zoro.Benchmark.Services
             startTime = DateTime.Now;
 
             int i = 0;
-            foreach (KeyValuePair<string, string> entry in keypairs)
+            Dictionary<string, object> transferArgs = new Dictionary<string, object>();
+            List<string> targetAddressList = new List<string>(); 
+	        foreach (KeyValuePair<string, string> entry in keypairs)
+	        { 
+	            targetAddressList.Add(entry.Value);
+	        }
+
+            ThreadPool.GetAvailableThreads(out int workerThreads, out int portThreads);
+            _logger.LogDebug("Current Available Threads. workerThreads:{0}, portThreads:{1}",
+                MaxThreads,
+                MaxCompletionPortThreads);
+
+            var queueTime = DateTime.Now;
+            int id = i++;
+            ThreadPool.QueueUserWorkItem(async (o) =>
             {
-                ThreadPool.GetAvailableThreads(out int workerThreads, out int portThreads);
-                _logger.LogDebug("Current Available Threads. workerThreads:{0}, portThreads:{1}",
-                   MaxThreads,
-                   MaxCompletionPortThreads);
+                OnTaskStart(id, queueTime);
+                // add a task here to simulate neo operation
+                //await Task.Delay(500);
+                //_logger.LogInformation("{0} Thread ID: {1}",
+                //    this.GetType().ToString(), System.Threading.Thread.CurrentThread.ManagedThreadId);
 
-                var queueTime = DateTime.Now;
-                int id = i++;
-                ThreadPool.QueueUserWorkItem(async (o) =>
-                {
-                    OnTaskStart(id, queueTime);
-                    // add a task here to simulate neo operation
-                    //await Task.Delay(500);
-                    //_logger.LogInformation("{0} Thread ID: {1}",
-                    //    this.GetType().ToString(), System.Threading.Thread.CurrentThread.ManagedThreadId);
+                _logger.LogDebug("Thread: {1}, Is pool thread: {2}",
+                   Thread.CurrentThread.GetHashCode(),
+                   Thread.CurrentThread.IsThreadPoolThread);
 
-                    _logger.LogDebug("Thread: {1}, Is pool thread: {2}",
-                       Thread.CurrentThread.GetHashCode(),
-                       Thread.CurrentThread.IsThreadPoolThread);
+                // Dictionary<string, object> transferArgs = new Dictionary<string, object>();
+                // transferArgs.Add("wif", entry.Key); // need to change to list if read from file
+                // @TODO
+                transferArgs.Add("wif", "KxtfaaFz2GgTJEH2YbekjkDaAxPDFa2cqq5AcY6xLm14gQqtFw3H");
+                transferArgs.Add("targetAddress", targetAddressList);
+                transferArgs.Add("sendCount", 1);
 
-                    Dictionary<string, object> transferArgs = new Dictionary<string, object>();
-                    // transferArgs.Add("wif", entry.Key); // need to change to list if read from file
-                    // @TODO
-                    transferArgs.Add("wif", "L3yQVZKu7u1etBWbeqfNeX1d19mRJdjZTZxiFt72AhLvxBDJwmne");
-                    transferArgs.Add("targetAddress", entry.Value);
-                    transferArgs.Add("sendCount", 1);
+                // run transfer async
+                await new TransferOneNeo(_logger, _config).Run(transferArgs);
 
-                    // run transfer async
-                    await new TransferOneNeo(_logger, _config).Run(transferArgs);
-
-                    OnTaskEnd(id, queueTime);
-                });
-            }
+                OnTaskEnd(id, queueTime);
+            });
 
             done.Wait();
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,7 @@ namespace Zoro.Benchmark.Services.Transactions
                 this.GetType().ToString(), Thread.CurrentThread.ManagedThreadId);
 
             string wif = args["wif"].ToString();
-            string targetAddress = args["targetAddress"].ToString();
+            List<string> targetAddress = (List<string>)args["targetAddress"];
             decimal sendCount = Decimal.Parse(args["sendCount"].ToString());
 
             byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
@@ -62,7 +63,7 @@ namespace Zoro.Benchmark.Services.Transactions
 
 
         //拼交易体
-        Transaction makeTran(Dictionary<string, List<UTXO>> dir_utxos, string fromAddress, string targetAddress, ThinNeo.Hash256 assetid, decimal sendcount)
+        Transaction makeTran(Dictionary<string, List<UTXO>> dir_utxos, string fromAddress, List<string> targetAddress, ThinNeo.Hash256 assetid, decimal sendcount)
         {
             if (!dir_utxos.ContainsKey(assetid.ToString()))
                 throw new Exception("no enough money.");
@@ -87,6 +88,7 @@ namespace Zoro.Benchmark.Services.Transactions
 
             Console.WriteLine(utxos.Count);
 
+	    decimal requiredcount = sendcount * targetAddress.Count;
             for (var i = 0; i < utxos.Count; i++)
             {
                 TransactionInput input = new TransactionInput();
@@ -94,7 +96,7 @@ namespace Zoro.Benchmark.Services.Transactions
                 input.index = (ushort)utxos[i].n;
                 list_inputs.Add(input);
                 count += utxos[i].value;
-                if (count >= (sendcount))
+                if (count >= (requiredcount))
                 {
                     break;
                 }
@@ -103,36 +105,43 @@ namespace Zoro.Benchmark.Services.Transactions
             tran.inputs = list_inputs.ToArray();
 
             Console.WriteLine(count);
-
-            if (count >= sendcount)//输入大于等于输出
-            {
-                List<TransactionOutput> list_outputs = new List<TransactionOutput>();
-                //输出
-                if (sendcount > decimal.Zero)
+            var all_sentcount = sendcount;
+            List<TransactionOutput> list_outputs = new List<TransactionOutput>();
+            foreach (var address in targetAddress)
+	    {
+                if (count >= all_sentcount)//输入大于等于输出
                 {
-                    TransactionOutput output = new TransactionOutput();
-                    output.assetId = assetid;
-                    output.value = sendcount;
-                    output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetAddress);
-                    list_outputs.Add(output);
-                }
-
-                //找零
-                var change = count - sendcount;
-                if (change > decimal.Zero)
+                    //输出
+                    if (sendcount > decimal.Zero)
+                    {
+                        TransactionOutput output = new TransactionOutput();
+                        output.assetId = assetid;
+                        output.value = sendcount;
+                        output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(address);
+                        Console.WriteLine(address);
+                        list_outputs.Add(output);
+			all_sentcount = all_sentcount + sendcount;
+                    }
+                else
                 {
-                    TransactionOutput outputchange = new TransactionOutput();
-                    outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(fromAddress);
-                    outputchange.value = change;
-                    outputchange.assetId = assetid;
-                    list_outputs.Add(outputchange);
+                    throw new Exception("no enough money.");
                 }
-                tran.outputs = list_outputs.ToArray();
-            }
-            else
+	        }
+
+	    }
+            //找零
+            var change = count - all_sentcount + sendcount;
+            Console.WriteLine(change);
+            if (change > decimal.Zero)
             {
-                throw new Exception("no enough money.");
+                TransactionOutput outputchange = new TransactionOutput();
+                outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(fromAddress);
+                Console.WriteLine("Transfred From " + fromAddress);
+                outputchange.value = change;
+                outputchange.assetId = assetid;
+                list_outputs.Add(outputchange);
             }
+            tran.outputs = list_outputs.ToArray();
             return tran;
         }
     }
