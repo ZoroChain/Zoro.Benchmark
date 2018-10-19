@@ -80,7 +80,10 @@ namespace Zoro.Benchmark.Services
                 transferArgs.Add("sendCount", 1);
 
                 // run transfer async
-                await new TransferOneNeo(_logger, _config).Run(transferArgs);
+                // Test NEO transfer
+                // await new TransferOneNeo(_logger, _config).Run(transferArgs);
+                // Test Bcp transfer
+                await new TransferOneBcp(_logger, _config).Run(transferArgs);
 
                 OnTaskEnd(id, queueTime);
             });

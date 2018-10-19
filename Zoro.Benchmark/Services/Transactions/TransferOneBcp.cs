@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ThinNeo;
+using System.Security.Cryptography;
 
 namespace Zoro.Benchmark.Services.Transactions
 {
@@ -23,7 +25,27 @@ namespace Zoro.Benchmark.Services.Transactions
         
         public string ContractHash = "0x0920825f8e657a3a10d1aff4ac9b64d80c68a905";
 
+        public string rpcurl = "http://182.254.221.14:10332";
+
         
+
+        public int GetCount()
+        {
+            int count = 0;
+            string getcounturl = rpcurl + "/?jsonrpc=2.0&id=1&method=getblockcount&params=[]";
+            System.Net.WebClient wc = new System.Net.WebClient();
+            try
+            {
+                var info = wc.DownloadString(getcounturl);
+                var json = Newtonsoft.Json.Linq.JObject.Parse(info);
+                count = (int)json["result"];
+            } catch (Exception e){
+                count = 0;
+            }
+            return count;
+            
+        }
+
         async public override Task Run(Dictionary<String, Object> args)
         {
             _logger.LogInformation("{0} Thread ID: {1}",
@@ -32,23 +54,32 @@ namespace Zoro.Benchmark.Services.Transactions
             string wif = args["wif"].ToString();
             List<string> targetAddress = (List<string>)args["targetAddress"];
             decimal sendCount = Decimal.Parse(args["sendCount"].ToString());
-
             byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
             Hash160 scripthash = ThinNeo.Helper.GetPublicKeyHashFromAddress(address);
 
-            
+            int n = 0;
             foreach (string toAddress in targetAddress)
             {
+                n += 1;
                 //拼合约的汇编工具
                 byte[] vmscript = null;
+                byte[] randombytes = new byte[32];
+                using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(randombytes);
+                }
+                BigInteger randomnum = new BigInteger(randombytes);
+
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
+                    sb.EmitPushNumber(randomnum);
+                    sb.Emit(ThinNeo.VM.OpCode.DROP);
                     var array = new MyJson.JsonNode_Array();
                     array.AddArrayValue("(addr)" + address);
                     array.AddArrayValue("(addr)" + toAddress);
-                    array.AddArrayValue("(int)" + sendCount);
+                    array.AddArrayValue("(int)" + sendCount + "00000000");
                     sb.EmitParamJson(array);
                     sb.EmitPushString("transfer");
                     sb.EmitAppCall(new Hash160(ContractHash));
@@ -85,13 +116,20 @@ namespace Zoro.Benchmark.Services.Transactions
                 string rawdata = ThinNeo.Helper.Bytes2HexString(data);
 
                 byte[] postdata;
-                var url = HttpHelper.MakeRpcUrlPost("http://182.254.221.14:10332", "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-                var result = await HttpHelper.HttpPost(url, postdata);
-                MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);
-                Console.WriteLine(resJO.ToString());
-                Console.WriteLine(address + " " + toAddress + "  ");
 
-                _logger.LogInformation("Transaxtion response: {0} {1}", txid, resJO.ToString());
+                try
+                {
+                    var url = HttpHelper.MakeRpcUrlPost(rpcurl, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
+
+                    var result = await HttpHelper.HttpPost(url, postdata);
+                    var blockCount = GetCount();
+                    MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);
+                    var timeStamp = string.Format("{0:yyyy-MM-dd_hh-mm-ss-fff}", DateTime.Now);
+                    _logger.LogInformation("{0} Transaction Number{1}: Transfer 1BCP From {2} to {3}, TXID={4}, CurrentBlockCount={5}, RPC result={6}",
+                        timeStamp, n, address, toAddress, txid, blockCount, resJO.ToString());
+                } catch (Exception e){
+                    _logger.LogInformation("Transaction Number{0} Failed:", n);
+                }
             }
         }
     }
